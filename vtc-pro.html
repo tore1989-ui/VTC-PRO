@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="VTC Pro">
+<title>VTC Pro — Gestión Profesional</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0b0d12;
+  --s1:        #111420;
+  --s2:        #171b28;
+  --s3:        #1e2235;
+  --border:    rgba(255,255,255,0.06);
+  --border2:   rgba(255,255,255,0.12);
+  --gold:      #d4a843;
+  --gold2:     #f0c060;
+  --gold-dim:  rgba(212,168,67,0.12);
+  --gold-glow: rgba(212,168,67,0.25);
+  --cyan:      #29d9c2;
+  --cyan-dim:  rgba(41,217,194,0.1);
+  --red:       #f04f4f;
+  --red-dim:   rgba(240,79,79,0.1);
+  --green:     #34d399;
+  --green-dim: rgba(52,211,153,0.1);
+  --blue:      #60a5fa;
+  --blue-dim:  rgba(96,165,250,0.1);
+  --text:      #e2e8f0;
+  --text2:     #94a3b8;
+  --text3:     #4a5568;
+  --radius:    10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100dvh;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif}
+
+/* ══ LAYOUT ══ */
+#app{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+
+/* ══ NAVBAR ══ */
+#nav{
+  display:flex;align-items:center;height:48px;padding:0 14px;
+  background:var(--s1);border-bottom:1px solid var(--border);
+  flex-shrink:0;gap:6px;position:relative;z-index:50
+}
+#nav::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.3}
+#logo{font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold);
+  letter-spacing:1px;flex-shrink:0;margin-right:8px}
+#logo span{color:var(--text2);font-family:'DM Mono',monospace;font-size:.65rem;
+  font-weight:400;letter-spacing:2px;margin-left:4px;vertical-align:middle}
+
+.nav-tab{
+  padding:5px 11px;border-radius:6px;font-size:.7rem;font-weight:600;
+  letter-spacing:.5px;cursor:pointer;transition:all .15s;border:none;
+  background:none;color:var(--text3);white-space:nowrap;flex-shrink:0
+}
+.nav-tab.active{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(212,168,67,.2)}
+.nav-tab:not(.active):hover{color:var(--text2)}
+
+#nav-clock{margin-left:auto;font-family:'DM Mono',monospace;font-size:.8rem;color:var(--text3);flex-shrink:0}
+#nav-status{
+  padding:3px 10px;border-radius:20px;font-size:.6rem;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;flex-shrink:0;
+  background:var(--s3);color:var(--text3);border:1px solid var(--border);
+  transition:all .3s
+}
+#nav-status.libre{background:var(--green-dim);color:var(--green);border-color:rgba(52,211,153,.25)}
+#nav-status.ocupado{background:var(--gold-dim);color:var(--gold);border-color:rgba(212,168,67,.25)}
+#nav-status .blink{animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ══ PAGES ══ */
+.page{display:none;flex:1;overflow:hidden}
+.page.active{display:flex}
+
+/* ══════════════════════════════════════════
+   PAGE 1 — TAXÍMETRO
+══════════════════════════════════════════ */
+#page-meter{flex-direction:row;gap:0}
+
+/* LEFT — price + controls */
+#meter-left{
+  display:flex;flex-direction:column;flex:1;padding:10px 12px;gap:8px;min-width:0
+}
+
+/* Price card */
+#price-card{
+  flex:1;background:var(--s1);border:1px solid var(--border);border-radius:12px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;min-height:0
+}
+#price-card::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+  width:240px;height:240px;background:radial-gradient(circle,var(--gold-glow),transparent 70%);
+  pointer-events:none;transition:opacity .5s}
+#price-card.off::before{opacity:0}
+#price-scan{position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  opacity:0;transition:opacity .3s}
+#price-scan.on{opacity:.5;animation:scan 2.5s linear infinite}
+@keyframes scan{0%{top:0}100%{top:100%}}
+.price-label{font-size:.6rem;letter-spacing:4px;color:var(--text3);text-transform:uppercase;
+  font-family:'DM Mono',monospace;margin-bottom:4px}
+#price-display{
+  font-family:'DM Mono',monospace;font-size:clamp(3rem,9vw,5.5rem);
+  color:var(--gold);font-weight:500;line-height:1;
+  text-shadow:0 0 30px var(--gold-glow),0 0 60px rgba(212,168,67,.1);
+  transition:color .2s
+}
+#price-display.flash{animation:pflash .15s}
+@keyframes pflash{0%{opacity:.5}100%{opacity:1}}
+#price-info{font-size:.6rem;color:var(--text3);font-family:'DM Mono',monospace;
+  margin-top:5px;letter-spacing:2px}
+#price-info span{color:var(--text2)}
+
+/* Metric pills */
+#metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;flex-shrink:0}
+.mpill{
+  background:var(--s1);border:1px solid var(--border);border-radius:8px;
+  padding:6px 8px;display:flex;flex-direction:column;align-items:center;gap:1px;
+  position:relative;overflow:hidden
+}
+.mpill::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1px;
+  background:var(--pill-c,var(--border2))}
+.mpill.c-gold{--pill-c:rgba(212,168,67,.4)}
+.mpill.c-cyan{--pill-c:rgba(41,217,194,.4)}
+.mpill.c-green{--pill-c:rgba(52,211,153,.4)}
+.mpill.c-blue{--pill-c:rgba(96,165,250,.4)}
+.mlbl{font-size:.52rem;letter-spacing:2px;color:var(--text3);
+  text-transform:uppercase;font-family:'DM Mono',monospace}
+.mval{font-family:'DM Mono',monospace;font-size:1.05rem;color:var(--text)}
+.mpill.c-gold .mval{color:var(--gold)}
+.mpill.c-cyan .mval{color:var(--cyan)}
+.mpill.c-green .mval{color:var(--green)}
+.mpill.c-blue .mval{color:var(--blue)}
+
+/* Action buttons */
+#meter-actions{display:grid;grid-template-columns:2fr 1fr;gap:8px;flex-shrink:0}
+.abtn{
+  border:none;border-radius:9px;font-family:'DM Sans',sans-serif;
+  font-size:.82rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  padding:12px 10px;cursor:pointer;transition:all .12s;position:relative;overflow:hidden
+}
+.abtn:active{transform:scale(.97)}
+#btn-go{background:linear-gradient(135deg,#b83200,#8a2400);color:#fff;
+  box-shadow:0 4px 20px rgba(184,50,0,.35)}
+#btn-go.running{background:linear-gradient(135deg,#065f46,#064e3b);color:#34d399;
+  box-shadow:0 4px 20px rgba(52,211,153,.2)}
+#btn-go.paused{background:linear-gradient(135deg,#78350f,#5c2a0a);color:var(--gold);
+  box-shadow:0 4px 20px rgba(212,168,67,.2)}
+#btn-end{background:var(--s2);border:1px solid var(--border);color:var(--text3)}
+#btn-end.active{border-color:rgba(96,165,250,.35);color:var(--blue);
+  background:var(--blue-dim);box-shadow:0 4px 16px rgba(96,165,250,.1)}
+
+/* RIGHT — tarifa + historial */
+#meter-right{
+  width:195px;flex-shrink:0;border-left:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;background:rgba(10,12,20,.6)
+}
+.rpanel-hdr{
+  padding:8px 10px 6px;border-bottom:1px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between
+}
+.rpanel-title{font-size:.55rem;letter-spacing:3px;color:var(--text3);
+  text-transform:uppercase;font-family:'DM Mono',monospace}
+
+/* Tarifa selector */
+#tarifa-btns{display:flex;flex-direction:column;gap:4px;padding:8px}
+.tbtn{
+  border:1px solid var(--border);background:var(--s2);border-radius:7px;
+  padding:6px 8px;cursor:pointer;display:flex;align-items:center;
+  justify-content:space-between;font-family:'DM Sans',sans-serif;transition:all .15s
+}
+.tbtn:active{transform:scale(.97)}
+.tbtn-name{font-size:.7rem;font-weight:600;letter-spacing:1px;color:var(--text3)}
+.tbtn-rate{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--text3)}
+.tbtn.sel-t1{border-color:rgba(212,168,67,.4);background:var(--gold-dim)}
+.tbtn.sel-t1 .tbtn-name{color:var(--gold)}
+.tbtn.sel-t2{border-color:rgba(41,217,194,.3);background:var(--cyan-dim)}
+.tbtn.sel-t2 .tbtn-name{color:var(--cyan)}
+.tbtn.sel-t3{border-color:rgba(240,79,79,.3);background:var(--red-dim)}
+.tbtn.sel-t3 .tbtn-name{color:var(--red)}
+.tsel-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);flex-shrink:0}
+.tbtn.sel-t1 .tsel-dot{background:var(--gold);box-shadow:0 0 6px var(--gold)}
+.tbtn.sel-t2 .tsel-dot{background:var(--cyan);box-shadow:0 0 6px var(--cyan)}
+.tbtn.sel-t3 .tsel-dot{background:var(--red);box-shadow:0 0 6px var(--red)}
+
+/* Historial mini */
+#mini-hist{flex:1;overflow-y:auto;padding:0 6px 6px}
+#mini-hist::-webkit-scrollbar{width:2px}
+#mini-hist::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.mhcard{
+  background:var(--s2);border:1px solid var(--border);border-radius:7px;
+  padding:5px 7px;margin-bottom:4px;animation:cin .25s ease
+}
+@keyframes cin{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:none}}
+.mhcard-top{display:flex;justify-content:space-between;align-items:center}
+.mhprice{font-family:'DM Mono',monospace;font-size:.85rem;color:var(--gold);font-weight:500}
+.mhbadge{font-size:.5rem;font-weight:700;padding:1px 5px;border-radius:3px;
+  text-transform:uppercase;letter-spacing:1px}
+.mhbadge.t1{background:var(--gold-dim);color:var(--gold)}
+.mhbadge.t2{background:var(--cyan-dim);color:var(--cyan)}
+.mhbadge.t3{background:var(--red-dim);color:var(--red)}
+.mhcard-bot{display:flex;gap:6px;margin-top:2px}
+.mhstat{font-family:'DM Mono',monospace;font-size:.56rem;color:var(--text3)}
+.mh-empty{text-align:center;padding:16px 0;font-size:.58rem;
+  letter-spacing:3px;color:var(--text3);text-transform:uppercase;font-family:'DM Mono',monospace}
+
+/* ══════════════════════════════════════════
+   PAGE 2 — RESERVAS
+══════════════════════════════════════════ */
+#page-reservas{flex-direction:column;overflow:hidden}
+#res-toolbar{
+  display:flex;align-items:center;gap:8px;padding:10px 14px;
+  border-bottom:1px solid var(--border);flex-shrink:0
+}
+#res-toolbar h2{font-size:.85rem;font-weight:700;letter-spacing:1px;color:var(--text);flex:1}
+.icon-btn{
+  width:34px;height:34px;border-radius:8px;border:1px solid var(--border);
+  background:var(--s2);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--text2);transition:all .15s;flex-shrink:0
+}
+.icon-btn:hover{border-color:var(--gold);color:var(--gold)}
+#res-list{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+#res-list::-webkit-scrollbar{width:3px}
+#res-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.res-card{
+  background:var(--s1);border:1px solid var(--border);border-radius:12px;
+  padding:10px 12px;display:flex;align-items:center;gap:10px;
+  transition:border-color .2s;cursor:pointer;animation:cin .2s ease
+}
+.res-card:hover{border-color:var(--border2)}
+.res-card.pendiente .res-stripe{background:var(--gold)}
+.res-card.activa .res-stripe{background:var(--green)}
+.res-card.completada .res-stripe{background:var(--text3)}
+.res-card.cancelada .res-stripe{background:var(--red)}
+.res-stripe{width:3px;height:40px;border-radius:2px;flex-shrink:0}
+.res-main{flex:1;min-width:0}
+.res-name{font-size:.82rem;font-weight:600;color:var(--text);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.res-route{font-size:.65rem;color:var(--text2);margin-top:2px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.res-meta{display:flex;gap:8px;margin-top:4px}
+.res-meta-item{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--text3)}
+.res-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.res-price{font-family:'DM Mono',monospace;font-size:.9rem;color:var(--gold);font-weight:500}
+.res-badge{font-size:.5rem;font-weight:700;padding:2px 7px;border-radius:10px;
+  text-transform:uppercase;letter-spacing:1px}
+.res-badge.pendiente{background:var(--gold-dim);color:var(--gold)}
+.res-badge.activa{background:var(--green-dim);color:var(--green)}
+.res-badge.completada{background:rgba(71,85,105,.2);color:var(--text3)}
+.res-badge.cancelada{background:var(--red-dim);color:var(--red)}
+.res-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:1;gap:8px;color:var(--text3);font-size:.75rem;letter-spacing:2px;
+  text-transform:uppercase;font-family:'DM Mono',monospace;padding:30px 0
+}
+
+/* ══════════════════════════════════════════
+   PAGE 3 — HISTORIAL & INGRESOS
+══════════════════════════════════════════ */
+#page-hist{flex-direction:column;overflow:hidden}
+#hist-toolbar{
+  display:flex;align-items:center;gap:8px;padding:10px 14px;
+  border-bottom:1px solid var(--border);flex-shrink:0
+}
+#hist-toolbar h2{font-size:.85rem;font-weight:700;color:var(--text);flex:1}
+
+/* Stats summary row */
+#hist-stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+  padding:10px 14px;flex-shrink:0;border-bottom:1px solid var(--border)
+}
+.hstat{background:var(--s1);border:1px solid var(--border);border-radius:8px;
+  padding:7px 10px;display:flex;flex-direction:column;align-items:center}
+.hstat-lbl{font-size:.5rem;letter-spacing:2px;color:var(--text3);
+  text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:2px}
+.hstat-val{font-family:'DM Mono',monospace;font-size:.9rem;color:var(--text)}
+.hstat-val.gold{color:var(--gold)}
+.hstat-val.green{color:var(--green)}
+
+/* Chart */
+#chart-wrap{padding:10px 14px 0;flex-shrink:0}
+.chart-title{font-size:.58rem;letter-spacing:3px;color:var(--text3);
+  text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:6px}
+#income-chart{width:100%;height:52px;display:block}
+
+/* Full historial list */
+#full-hist{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:6px}
+#full-hist::-webkit-scrollbar{width:3px}
+#full-hist::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.fhrow{
+  background:var(--s1);border:1px solid var(--border);border-radius:9px;
+  padding:8px 12px;display:grid;
+  grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;
+  transition:border-color .15s;cursor:pointer
+}
+.fhrow:hover{border-color:var(--border2)}
+.fh-num{font-family:'DM Mono',monospace;font-size:.65rem;color:var(--text3);
+  background:var(--s3);padding:2px 6px;border-radius:4px}
+.fh-info{}
+.fh-time{font-size:.7rem;font-weight:600;color:var(--text)}
+.fh-detail{font-family:'DM Mono',monospace;font-size:.58rem;color:var(--text3)}
+.fh-tarifa{font-size:.52rem;font-weight:700;padding:1px 6px;border-radius:4px;
+  text-transform:uppercase;letter-spacing:1px;align-self:start}
+.fh-tarifa.t1{background:var(--gold-dim);color:var(--gold)}
+.fh-tarifa.t2{background:var(--cyan-dim);color:var(--cyan)}
+.fh-tarifa.t3{background:var(--red-dim);color:var(--red)}
+.fh-price{font-family:'DM Mono',monospace;font-size:.9rem;color:var(--gold);
+  font-weight:500;text-align:right}
+
+/* ══════════════════════════════════════════
+   PAGE 4 — CONFIGURACIÓN
+══════════════════════════════════════════ */
+#page-cfg{flex-direction:column;overflow-y:auto}
+#page-cfg::-webkit-scrollbar{width:3px}
+#page-cfg::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.cfg-wrap{padding:14px;display:flex;flex-direction:column;gap:14px}
+.cfg-block{background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.cfg-block-hdr{
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  font-size:.65rem;font-weight:700;letter-spacing:3px;color:var(--gold);
+  text-transform:uppercase;font-family:'DM Mono',monospace
+}
+.cfg-body{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.cfg-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cfg-field{display:flex;flex-direction:column;gap:4px}
+.cfg-field label{font-size:.55rem;letter-spacing:2px;color:var(--text3);
+  text-transform:uppercase;font-family:'DM Mono',monospace}
+.cfg-field input,.cfg-field select{
+  background:var(--bg);border:1px solid var(--border);border-radius:7px;
+  padding:8px 10px;color:var(--text);font-family:'DM Mono',monospace;
+  font-size:.85rem;outline:none;transition:border-color .2s;width:100%
+}
+.cfg-field input:focus,.cfg-field select:focus{border-color:var(--gold)}
+.cfg-field select{-webkit-appearance:none;appearance:none}
+.cfg-save-btn{
+  background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;
+  border:none;border-radius:9px;padding:12px;font-family:'DM Sans',sans-serif;
+  font-size:.8rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  cursor:pointer;transition:all .15s;box-shadow:0 4px 20px var(--gold-glow)
+}
+.cfg-save-btn:active{transform:scale(.97)}
+
+/* Driver profile card */
+#driver-card{
+  background:linear-gradient(135deg,var(--s2) 0%,var(--s1) 100%);
+  border:1px solid var(--border);border-radius:12px;padding:14px;
+  display:flex;align-items:center;gap:12px
+}
+#driver-avatar{
+  width:48px;height:48px;border-radius:50%;border:2px solid var(--gold);
+  background:var(--gold-dim);display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;flex-shrink:0
+}
+#driver-name{font-size:.95rem;font-weight:700;color:var(--text)}
+#driver-meta{font-size:.65rem;color:var(--text2);margin-top:3px;font-family:'DM Mono',monospace}
+#driver-license{
+  margin-left:auto;background:var(--gold-dim);border:1px solid rgba(212,168,67,.3);
+  border-radius:6px;padding:4px 10px;font-size:.6rem;font-weight:700;
+  color:var(--gold);letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono',monospace
+}
+
+/* ══ BOTTOM BAR ══ */
+#bottombar{
+  background:var(--s1);border-top:1px solid var(--border);
+  padding:4px 14px;display:flex;align-items:center;gap:16px;
+  flex-shrink:0;position:relative;z-index:40
+}
+.bb-stat{display:flex;align-items:center;gap:5px;font-size:.6rem}
+.bb-lbl{color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase}
+.bb-val{color:var(--cyan);font-family:'DM Mono',monospace;font-weight:500}
+.bb-val.gold{color:var(--gold)}
+.bb-sep{width:1px;height:14px;background:var(--border)}
+#bb-reset{margin-left:auto;background:none;border:1px solid var(--border);border-radius:5px;
+  padding:3px 8px;font-family:'DM Mono',monospace;font-size:.52rem;color:var(--text3);
+  cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .2s}
+#bb-reset:hover{border-color:var(--red);color:var(--red)}
+
+/* ══ MODALS ══ */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:100;
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.overlay.open{display:flex}
+.modal{
+  background:var(--s1);border:1px solid var(--border2);border-radius:14px;
+  padding:18px;width:min(92vw,360px);max-height:88dvh;overflow-y:auto;
+  position:relative
+}
+.modal::-webkit-scrollbar{width:3px}
+.modal::-webkit-scrollbar-thumb{background:var(--border2)}
+.modal::before{content:'';position:absolute;top:0;left:20%;right:20%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.modal-h{font-size:.85rem;font-weight:700;color:var(--gold);
+  letter-spacing:3px;text-align:center;margin-bottom:14px;text-transform:uppercase}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.mfield{display:flex;flex-direction:column;gap:4px}
+.mfield label{font-size:.52rem;letter-spacing:2px;color:var(--text3);
+  text-transform:uppercase;font-family:'DM Mono',monospace}
+.mfield input,.mfield select,.mfield textarea{
+  background:var(--bg);border:1px solid var(--border);border-radius:7px;
+  padding:8px 10px;color:var(--text);font-family:'DM Mono',monospace;
+  font-size:.82rem;outline:none;transition:border-color .2s;width:100%
+}
+.mfield input:focus,.mfield select:focus,.mfield textarea:focus{border-color:var(--gold)}
+.mfield textarea{height:56px;resize:none;font-family:'DM Sans',sans-serif;font-size:.78rem}
+.mfield.full{grid-column:1/-1}
+.modal-btns{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:14px}
+.mbtn{border:none;border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;
+  font-size:.75rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.mbtn:active{transform:scale(.97)}
+.mbtn-cancel{background:var(--s3);border:1px solid var(--border);color:var(--text3)}
+.mbtn-ok{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;
+  box-shadow:0 4px 16px var(--gold-glow)}
+
+/* ══ TICKET RECEIPT ══ */
+#receipt-wrap{
+  background:#f7f4ee;border-radius:4px;width:min(88vw,260px);
+  font-family:'DM Mono',monospace;box-shadow:0 12px 50px rgba(0,0,0,.8);
+  animation:rcp .3s cubic-bezier(.34,1.56,.64,1);overflow:hidden
+}
+@keyframes rcp{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+.rcp-head{background:#0b0d12;padding:12px 16px;text-align:center}
+.rcp-logo{font-family:'Playfair Display',serif;font-size:.95rem;color:var(--gold)}
+.rcp-sub{font-size:.55rem;color:#666;letter-spacing:3px;margin-top:2px}
+.rcp-body{padding:12px 16px;color:#222}
+.rcp-amount{text-align:center;margin:6px 0 10px}
+.rcp-amount-lbl{font-size:.55rem;color:#888;letter-spacing:3px;text-transform:uppercase}
+.rcp-amount-val{font-size:2.4rem;color:#111;font-weight:700;line-height:1.1}
+.rcp-div{border:none;border-top:1px dashed #ccc;margin:8px 0}
+.rcp-row{display:flex;justify-content:space-between;font-size:.62rem;
+  color:#444;margin-bottom:5px}
+.rcp-row .rl{color:#888}
+.rcp-foot{padding:8px 16px 14px;text-align:center}
+.rcp-thanks{font-size:.55rem;color:#aaa;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px}
+.rcp-barcode{display:flex;justify-content:center;gap:1px;margin-bottom:10px}
+.bar{background:#333;height:20px;border-radius:0}
+.rcp-close{display:block;width:100%;padding:10px;border:none;border-radius:4px;
+  background:#0b0d12;color:var(--gold);font-family:'DM Mono',monospace;
+  font-size:.7rem;letter-spacing:3px;text-transform:uppercase;cursor:pointer}
+
+/* Landscape compact */
+@media(orientation:landscape)and(max-height:430px){
+  #nav{height:38px}
+  .nav-tab{font-size:.62rem;padding:4px 9px}
+  #price-display{font-size:clamp(2.6rem,7vw,4rem)}
+  .mpill{padding:4px 6px}
+  .mval{font-size:.9rem}
+  .abtn{padding:9px 8px;font-size:.75rem}
+  #meter-right{width:170px}
+  #bottombar{padding:3px 12px;gap:10px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══ NAV ══ -->
+<nav id="nav">
+  <div id="logo">VTC<span>PRO</span></div>
+  <button class="nav-tab active" onclick="goPage('meter',this)">Taxímetro</button>
+  <button class="nav-tab" onclick="goPage('reservas',this)">Reservas</button>
+  <button class="nav-tab" onclick="goPage('hist',this)">Ingresos</button>
+  <button class="nav-tab" onclick="goPage('cfg',this)">Config</button>
+  <div id="nav-clock">--:--</div>
+  <div id="nav-status" class="libre"><span class="blink" id="status-dot" style="display:none">●</span> <span id="status-txt">LIBRE</span></div>
+</nav>
+
+<!-- ══ PAGE: TAXÍMETRO ══ -->
+<div class="page active" id="page-meter">
+  <div id="meter-left">
+    <div id="price-card" class="off">
+      <div id="precio-scan"></div>
+      <div class="price-label">Importe</div>
+      <div id="price-display">0,00€</div>
+      <div id="price-info">Bandera: <span id="inf-ban">2,40€</span> · <span id="inf-tar">T1 — Día</span></div>
+    </div>
+    <div id="metrics">
+      <div class="mpill c-cyan"><div class="mlbl">Tiempo</div><div class="mval" id="m-t">00:00</div></div>
+      <div class="mpill c-gold"><div class="mlbl">km</div><div class="mval" id="m-k">0,000</div></div>
+      <div class="mpill c-green"><div class="mlbl">km/h</div><div class="mval" id="m-v">0</div></div>
+      <div class="mpill c-blue"><div class="mlbl">€/km</div><div class="mval" id="m-e">—</div></div>
+    </div>
+    <div id="meter-actions">
+      <button class="abtn" id="btn-go" onclick="handleGo()">▶ Iniciar Carrera</button>
+      <button class="abtn" id="btn-end" onclick="finalizarCarrera()">Finalizar</button>
+    </div>
+  </div>
+  <div id="meter-right">
+    <div class="rpanel-hdr">
+      <span class="rpanel-title">Tarifa</span>
+    </div>
+    <div id="tarifa-btns">
+      <div class="tbtn sel-t1" id="tb1" onclick="setTarifa(1)">
+        <div><div class="tbtn-name">T1 — Día</div><div class="tbtn-rate" id="tr1">—</div></div>
+        <div class="tsel-dot"></div>
+      </div>
+      <div class="tbtn" id="tb2" onclick="setTarifa(2)">
+        <div><div class="tbtn-name">T2 — Noche</div><div class="tbtn-rate" id="tr2">—</div></div>
+        <div class="tsel-dot"></div>
+      </div>
+      <div class="tbtn" id="tb3" onclick="setTarifa(3)">
+        <div><div class="tbtn-name">T3 — Festivo</div><div class="tbtn-rate" id="tr3">—</div></div>
+        <div class="tsel-dot"></div>
+      </div>
+    </div>
+    <div class="rpanel-hdr" style="margin-top:4px">
+      <span class="rpanel-title">Carreras hoy</span>
+      <span style="font-family:'DM Mono',monospace;font-size:.72rem;color:var(--green)" id="rp-total">0,00€</span>
+    </div>
+    <div id="mini-hist"><div class="mh-empty">Sin carreras</div></div>
+  </div>
+</div>
+
+<!-- ══ PAGE: RESERVAS ══ -->
+<div class="page" id="page-reservas">
+  <div id="res-toolbar">
+    <h2>Reservas</h2>
+    <button class="icon-btn" onclick="openResModal()" title="Nueva reserva">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+  <div id="res-list"><div class="res-empty">📋<br>Sin reservas aún<br><span style="font-size:.55rem">Pulsa + para añadir</span></div></div>
+</div>
+
+<!-- ══ PAGE: HISTORIAL ══ -->
+<div class="page" id="page-hist">
+  <div id="hist-toolbar">
+    <h2>Ingresos y Historial</h2>
+    <button class="icon-btn" onclick="exportCSV()" title="Exportar CSV">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+  </div>
+  <div id="hist-stats">
+    <div class="hstat"><div class="hstat-lbl">Carreras</div><div class="hstat-val" id="hs-n">0</div></div>
+    <div class="hstat"><div class="hstat-lbl">km totales</div><div class="hstat-val" id="hs-km">0,0</div></div>
+    <div class="hstat"><div class="hstat-lbl">Recaudación</div><div class="hstat-val gold" id="hs-tot">0,00€</div></div>
+    <div class="hstat"><div class="hstat-lbl">Media/carrera</div><div class="hstat-val green" id="hs-avg">—</div></div>
+  </div>
+  <div id="chart-wrap">
+    <div class="chart-title">Ingresos por carrera</div>
+    <canvas id="income-chart"></canvas>
+  </div>
+  <div id="full-hist"></div>
+</div>
+
+<!-- ══ PAGE: CONFIG ══ -->
+<div class="page" id="page-cfg">
+  <div class="cfg-wrap">
+
+    <!-- Conductor -->
+    <div id="driver-card">
+      <div id="driver-avatar">🚗</div>
+      <div>
+        <div id="driver-name">Conductor VTC</div>
+        <div id="driver-meta" id="driver-meta2">Sin licencia configurada</div>
+      </div>
+      <div id="driver-license">VTC</div>
+    </div>
+
+    <div class="cfg-block">
+      <div class="cfg-block-hdr">Datos del conductor</div>
+      <div class="cfg-body">
+        <div class="cfg-row">
+          <div class="cfg-field"><label>Nombre completo</label><input type="text" id="cfg-nombre" placeholder="Nombre Apellidos"></div>
+          <div class="cfg-field"><label>Nº Licencia VTC</label><input type="text" id="cfg-licencia" placeholder="VTC-0000-XX"></div>
+        </div>
+        <div class="cfg-row">
+          <div class="cfg-field"><label>Vehículo</label><input type="text" id="cfg-vehiculo" placeholder="VW Passat 2018"></div>
+          <div class="cfg-field"><label>Matrícula</label><input type="text" id="cfg-matricula" placeholder="0000 ABC"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cfg-block">
+      <div class="cfg-block-hdr">Tarifas</div>
+      <div class="cfg-body">
+        <div class="cfg-row">
+          <div class="cfg-field"><label>Bajada de bandera (€)</label><input type="number" id="cfg-ban" step="0.01" value="2.40"></div>
+          <div class="cfg-field"><label>Mínimo carrera (€)</label><input type="number" id="cfg-min" step="0.01" value="4.00"></div>
+        </div>
+        <div class="cfg-block-hdr" style="font-size:.55rem;color:var(--text3);background:none;border:none;padding:4px 0 2px;margin-top:4px">T1 — Día</div>
+        <div class="cfg-row">
+          <div class="cfg-field"><label>€ / km</label><input type="number" id="cfg-t1k" step="0.001" value="1.050"></div>
+          <div class="cfg-field"><label>€ / minuto</label><input type="number" id="cfg-t1m" step="0.001" value="0.200"></div>
+        </div>
+        <div class="cfg-block-hdr" style="font-size:.55rem;color:var(--text3);background:none;border:none;padding:4px 0 2px">T2 — Noche</div>
+        <div class="cfg-row">
+          <div class="cfg-field"><label>€ / km</label><input type="number" id="cfg-t2k" step="0.001" value="1.250"></div>
+          <div class="cfg-field"><label>€ / minuto</label><input type="number" id="cfg-t2m" step="0.001" value="0.250"></div>
+        </div>
+        <div class="cfg-block-hdr" style="font-size:.55rem;color:var(--text3);background:none;border:none;padding:4px 0 2px">T3 — Festivo</div>
+        <div class="cfg-row">
+          <div class="cfg-field"><label>€ / km</label><input type="number" id="cfg-t3k" step="0.001" value="1.450"></div>
+          <div class="cfg-field"><label>€ / minuto</label><input type="number" id="cfg-t3m" step="0.001" value="0.300"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="cfg-save-btn" onclick="saveCfg()">Guardar configuración</button>
+
+  </div>
+</div>
+
+<!-- ══ BOTTOM BAR ══ -->
+<div id="bottombar">
+  <div class="bb-stat"><span class="bb-lbl">Carreras</span><span class="bb-val" id="bb-n">0</span></div>
+  <div class="bb-sep"></div>
+  <div class="bb-stat"><span class="bb-lbl">km</span><span class="bb-val" id="bb-km">0,0</span></div>
+  <div class="bb-sep"></div>
+  <div class="bb-stat"><span class="bb-lbl">Total</span><span class="bb-val gold" id="bb-tot">0,00€</span></div>
+  <div class="bb-sep"></div>
+  <div class="bb-stat"><span class="bb-lbl">Media</span><span class="bb-val" id="bb-avg">—</span></div>
+  <button id="bb-reset" onclick="resetJornada()">↺ Reset jornada</button>
+</div>
+
+</div><!-- /app -->
+
+<!-- ══ NUEVA RESERVA MODAL ══ -->
+<div class="overlay" id="res-overlay">
+  <div class="modal">
+    <div class="modal-h">Nueva Reserva</div>
+    <div class="mrow">
+      <div class="mfield"><label>Nombre cliente</label><input type="text" id="r-nombre" placeholder="Nombre completo"></div>
+      <div class="mfield"><label>Teléfono</label><input type="tel" id="r-tel" placeholder="6XX XXX XXX"></div>
+    </div>
+    <div class="mrow">
+      <div class="mfield"><label>Fecha</label><input type="date" id="r-fecha"></div>
+      <div class="mfield"><label>Hora</label><input type="time" id="r-hora"></div>
+    </div>
+    <div class="mrow">
+      <div class="mfield"><label>Origen</label><input type="text" id="r-origen" placeholder="Dirección recogida"></div>
+      <div class="mfield"><label>Destino</label><input type="text" id="r-destino" placeholder="Dirección destino"></div>
+    </div>
+    <div class="mrow">
+      <div class="mfield"><label>Precio est. (€)</label><input type="number" id="r-precio" step="0.01" placeholder="0,00"></div>
+      <div class="mfield"><label>Tarifa</label>
+        <select id="r-tarifa"><option value="1">T1 — Día</option><option value="2">T2 — Noche</option><option value="3">T3 — Festivo</option></select>
+      </div>
+    </div>
+    <div class="mrow"><div class="mfield full"><label>Notas</label><textarea id="r-notas" placeholder="Observaciones..."></textarea></div></div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="closeResModal()">Cancelar</button>
+      <button class="mbtn mbtn-ok" onclick="saveReserva()">Guardar Reserva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TICKET OVERLAY ══ -->
+<div class="overlay" id="ticket-overlay">
+  <div id="receipt-wrap">
+    <div class="rcp-head">
+      <div class="rcp-logo">VTC Pro</div>
+      <div class="rcp-sub" id="tk-sub">Ticket de carrera</div>
+    </div>
+    <div class="rcp-body">
+      <div class="rcp-amount">
+        <div class="rcp-amount-lbl">IMPORTE TOTAL</div>
+        <div class="rcp-amount-val" id="tk-tot">0,00€</div>
+      </div>
+      <hr class="rcp-div">
+      <div class="rcp-row"><span class="rl">Conductor</span><span id="tk-driver">—</span></div>
+      <div class="rcp-row"><span class="rl">Vehículo</span><span id="tk-veh">—</span></div>
+      <div class="rcp-row"><span class="rl">Tarifa</span><span id="tk-tar">—</span></div>
+      <div class="rcp-row"><span class="rl">Bandera</span><span id="tk-ban">—</span></div>
+      <div class="rcp-row"><span class="rl">Distancia</span><span id="tk-km">—</span></div>
+      <div class="rcp-row"><span class="rl">Duración</span><span id="tk-dur">—</span></div>
+      <div class="rcp-row"><span class="rl">Inicio</span><span id="tk-ini">—</span></div>
+      <div class="rcp-row"><span class="rl">Fin</span><span id="tk-fin">—</span></div>
+      <hr class="rcp-div">
+      <div class="rcp-row"><span class="rl">Precio/km efectivo</span><span id="tk-pkm">—</span></div>
+    </div>
+    <div class="rcp-foot">
+      <div class="rcp-thanks">Gracias por viajar con nosotros</div>
+      <div class="rcp-barcode" id="rcp-bc"></div>
+    </div>
+    <button class="rcp-close" onclick="closeTicket()">Nueva carrera</button>
+  </div>
+</div>
+
+<script>
+// ══════════════ CONFIG & STATE ══════════════
+const cfg = {
+  nombre:'Conductor VTC', licencia:'', vehiculo:'', matricula:'',
+  bajada:2.40, minimo:4.00,
+  t:{
+    1:{km:1.050,min:0.200,name:'T1 — Día'},
+    2:{km:1.250,min:0.250,name:'T2 — Noche'},
+    3:{km:1.450,min:0.300,name:'T3 — Festivo'}
+  }
+};
+
+const state = {
+  running:false, paused:false, tarifa:1,
+  precio:0, dist:0, seg:0, vel:0,
+  timer:null, geo:null, lastLL:null, tIni:null,
+  historial:[], reservas:[], jornada:{n:0,km:0,tot:0}
+};
+
+// ══════════════ ROUTING ══════════════
+function goPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(id==='hist'){renderFullHist();drawChart();}
+}
+
+// ══════════════ CLOCK ══════════════
+function tickClock(){
+  const n=new Date();
+  document.getElementById('nav-clock').textContent=
+    String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+}
+setInterval(tickClock,10000); tickClock();
+
+// ══════════════ FORMAT ══════════════
+const fE=v=>v.toFixed(2).replace('.',',')+'\u20AC';
+const fK=v=>v.toFixed(3).replace('.',',');
+const fKs=v=>v.toFixed(1).replace('.',',');
+const fT=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+const fDate=d=>{const dt=new Date(d);return dt.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit'});};
+const fTime=()=>new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+
+// ══════════════ STATUS ══════════════
+function setStatus(st){
+  const badge=document.getElementById('nav-status');
+  const dot=document.getElementById('status-dot');
+  const txt=document.getElementById('status-txt');
+  badge.className='';
+  badge.classList.add(st);
+  if(st==='ocupado'){dot.style.display='';txt.textContent='OCUPADO';}
+  else if(st==='libre'){dot.style.display='none';txt.textContent='LIBRE';}
+  else{dot.style.display='none';txt.textContent='PAUSA';}
+}
+
+// ══════════════ TARIFA ══════════════
+function setTarifa(n){
+  if(state.running)return;
+  state.tarifa=n;
+  [1,2,3].forEach(i=>{
+    const b=document.getElementById('tb'+i);
+    b.className='tbtn'+(i===n?` sel-t${i}`:'');
+  });
+  document.getElementById('inf-tar').textContent=cfg.t[n].name;
+  refreshTarifaRates();
+}
+
+function refreshTarifaRates(){
+  [1,2,3].forEach(i=>{
+    document.getElementById('tr'+i).textContent=
+      cfg.t[i].km.toFixed(3)+'€/km · '+cfg.t[i].min.toFixed(3)+'€/min';
+  });
+  document.getElementById('inf-ban').textContent=fE(cfg.bajada);
+  document.getElementById('inf-tar').textContent=cfg.t[state.tarifa].name;
+}
+
+// ══════════════ PRICE ══════════════
+function calcPrecio(){
+  const t=cfg.t[state.tarifa];
+  const raw=cfg.bajada + state.dist*t.km + (state.seg/60)*t.min;
+  state.precio=Math.max(raw,cfg.minimo);
+}
+
+function updateUI(){
+  const val=state.precio.toFixed(2).replace('.',',')+'€';
+  const pd=document.getElementById('price-display');
+  if(pd.textContent!==val){
+    pd.textContent=val;
+    pd.classList.remove('flash');
+    void pd.offsetWidth;
+    pd.classList.add('flash');
+  }
+  document.getElementById('m-t').textContent=fT(state.seg);
+  document.getElementById('m-k').textContent=fK(state.dist);
+  document.getElementById('m-v').textContent=Math.round(state.vel);
+  document.getElementById('m-e').textContent=state.running&&state.dist>0.001
+    ?(state.precio/state.dist).toFixed(2).replace('.',',') : '—';
+}
+
+// ══════════════ GPS ══════════════
+function startGPS(){
+  if(!navigator.geolocation)return;
+  state.lastLL=null;
+  state.geo=navigator.geolocation.watchPosition(pos=>{
+    state.vel=pos.coords.speed?pos.coords.speed*3.6:0;
+    if(state.lastLL&&state.running&&!state.paused){
+      state.dist+=haversine(state.lastLL.lat,state.lastLL.lng,pos.coords.latitude,pos.coords.longitude);
+    }
+    state.lastLL={lat:pos.coords.latitude,lng:pos.coords.longitude};
+  },()=>{},{enableHighAccuracy:true,maximumAge:1000,timeout:6000});
+}
+function stopGPS(){
+  if(state.geo!==null){navigator.geolocation.clearWatch(state.geo);state.geo=null;}
+  state.vel=0;
+}
+function haversine(a,b,c,d){
+  const R=6371,r=Math.PI/180;
+  const dA=(c-a)*r,dB=(d-b)*r;
+  const x=Math.sin(dA/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dB/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+
+// ══════════════ CARRERA ══════════════
+function handleGo(){
+  if(!state.running&&!state.paused)startCarrera();
+  else if(state.running)pausarCarrera();
+  else resumirCarrera();
+}
+
+function startCarrera(){
+  state.running=true;state.paused=false;
+  state.precio=cfg.bajada;state.dist=0;state.seg=0;state.vel=0;
+  state.tIni=fTime();
+  setStatus('ocupado');
+  const btn=document.getElementById('btn-go');
+  btn.className='abtn running'; btn.textContent='⏸ Pausar';
+  document.getElementById('btn-end').classList.add('active');
+  document.getElementById('price-card').classList.remove('off');
+  document.getElementById('precio-scan').classList.add('on');
+  state.timer=setInterval(()=>{state.seg++;calcPrecio();updateUI();},1000);
+  startGPS(); updateUI();
+}
+function pausarCarrera(){
+  state.running=false;state.paused=true;
+  clearInterval(state.timer);
+  setStatus('pausa');
+  const btn=document.getElementById('btn-go');
+  btn.className='abtn paused'; btn.textContent='▶ Continuar';
+  document.getElementById('precio-scan').classList.remove('on');
+}
+function resumirCarrera(){
+  state.running=true;state.paused=false;
+  setStatus('ocupado');
+  const btn=document.getElementById('btn-go');
+  btn.className='abtn running'; btn.textContent='⏸ Pausar';
+  document.getElementById('precio-scan').classList.add('on');
+  state.timer=setInterval(()=>{state.seg++;calcPrecio();updateUI();},1000);
+}
+function finalizarCarrera(){
+  if(state.seg===0&&state.dist<0.001)return;
+  clearInterval(state.timer); stopGPS();
+  const c={
+    precio:state.precio,dist:state.dist,seg:state.seg,tarifa:state.tarifa,
+    ini:state.tIni,fin:fTime(),
+    fecha:new Date().toISOString()
+  };
+  state.historial.unshift(c);
+  state.jornada.n++;state.jornada.km+=c.dist;state.jornada.tot+=c.precio;
+  updateJornada(); renderMiniHist(); showTicket(c);
+  // reset
+  state.running=false;state.paused=false;
+  state.precio=0;state.dist=0;state.seg=0;state.vel=0;
+  setStatus('libre');
+  const btn=document.getElementById('btn-go');
+  btn.className='abtn'; btn.textContent='▶ Iniciar Carrera';
+  document.getElementById('btn-end').classList.remove('active');
+  document.getElementById('price-card').classList.add('off');
+  document.getElementById('precio-scan').classList.remove('on');
+  updateUI();
+}
+
+// ══════════════ MINI HISTORIAL ══════════════
+function renderMiniHist(){
+  const box=document.getElementById('mini-hist');
+  if(state.historial.length===0){box.innerHTML='<div class="mh-empty">Sin carreras</div>';return;}
+  const tot=state.historial.reduce((a,c)=>a+c.precio,0);
+  document.getElementById('rp-total').textContent=fE(tot);
+  box.innerHTML='';
+  state.historial.slice(0,15).forEach(c=>{
+    const el=document.createElement('div');el.className='mhcard';
+    el.innerHTML=`<div class="mhcard-top">
+      <span class="mhprice">${fE(c.precio)}</span>
+      <span class="mhbadge t${c.tarifa}">T${c.tarifa}</span>
+    </div>
+    <div class="mhcard-bot">
+      <span class="mhstat">${fK(c.dist)} km</span>
+      <span class="mhstat">${fT(c.seg)}</span>
+      <span class="mhstat">${c.fin}</span>
+    </div>`;
+    box.appendChild(el);
+  });
+}
+
+// ══════════════ JORNADA ══════════════
+function updateJornada(){
+  const j=state.jornada;
+  document.getElementById('bb-n').textContent=j.n;
+  document.getElementById('bb-km').textContent=fKs(j.km);
+  document.getElementById('bb-tot').textContent=fE(j.tot);
+  document.getElementById('bb-avg').textContent=j.n>0?fE(j.tot/j.n):'—';
+  // hist page
+  document.getElementById('hs-n').textContent=j.n;
+  document.getElementById('hs-km').textContent=fKs(j.km);
+  document.getElementById('hs-tot').textContent=fE(j.tot);
+  document.getElementById('hs-avg').textContent=j.n>0?fE(j.tot/j.n):'—';
+}
+function resetJornada(){
+  if(state.running||state.paused)return;
+  if(!confirm('¿Resetear jornada completa?'))return;
+  state.historial=[];state.jornada={n:0,km:0,tot:0};
+  updateJornada(); renderMiniHist(); renderFullHist(); drawChart();
+}
+
+// ══════════════ FULL HISTORIAL ══════════════
+function renderFullHist(){
+  const box=document.getElementById('full-hist');
+  updateJornada();
+  if(state.historial.length===0){
+    box.innerHTML='<div class="mh-empty" style="padding:30px 0">Sin carreras registradas</div>';
+    return;
+  }
+  box.innerHTML='';
+  state.historial.forEach((c,i)=>{
+    const el=document.createElement('div');el.className='fhrow';
+    el.innerHTML=`<div class="fh-num">#${String(state.historial.length-i).padStart(2,'0')}</div>
+    <div class="fh-info">
+      <div class="fh-time">${c.ini} → ${c.fin} · ${fDate(c.fecha)}</div>
+      <div class="fh-detail">${fK(c.dist)} km · ${fT(c.seg)}</div>
+    </div>
+    <span class="fh-tarifa t${c.tarifa}">T${c.tarifa}</span>
+    <div class="fh-price">${fE(c.precio)}</div>`;
+    box.appendChild(el);
+  });
+}
+
+// ══════════════ CHART ══════════════
+function drawChart(){
+  const canvas=document.getElementById('income-chart');
+  const W=canvas.offsetWidth||300, H=52;
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+  const data=state.historial.slice(0,20).reverse().map(c=>c.precio);
+  if(data.length<2){
+    ctx.fillStyle='rgba(74,85,104,.5)';ctx.font='500 9px DM Mono';
+    ctx.textAlign='center';
+    ctx.fillText('Gráfico disponible con 2+ carreras',W/2,H/2+3);
+    return;
+  }
+  const max=Math.max(...data)*1.15||1;
+  const pts=data.map((v,i)=>({
+    x:(i/(data.length-1))*(W-10)+5,
+    y:H-4-((v/max)*(H-10))
+  }));
+  // grid
+  ctx.strokeStyle='rgba(255,255,255,.04)';ctx.lineWidth=1;
+  [.25,.5,.75].forEach(f=>{
+    const y=H-4-((f)*(H-10));
+    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
+  });
+  // fill
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'rgba(212,168,67,.3)');g.addColorStop(1,'rgba(212,168,67,0)');
+  ctx.beginPath();ctx.moveTo(pts[0].x,H);
+  pts.forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.lineTo(pts[pts.length-1].x,H);ctx.closePath();ctx.fillStyle=g;ctx.fill();
+  // line
+  ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.strokeStyle='rgba(212,168,67,.8)';ctx.lineWidth=1.5;ctx.stroke();
+  // dots
+  pts.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);
+    ctx.fillStyle='#d4a843';ctx.fill();});
+}
+
+// ══════════════ RESERVAS ══════════════
+function openResModal(){
+  const hoy=new Date().toISOString().split('T')[0];
+  document.getElementById('r-fecha').value=hoy;
+  document.getElementById('r-hora').value='';
+  document.getElementById('r-nombre').value='';
+  document.getElementById('r-tel').value='';
+  document.getElementById('r-origen').value='';
+  document.getElementById('r-destino').value='';
+  document.getElementById('r-precio').value='';
+  document.getElementById('r-notas').value='';
+  document.getElementById('r-tarifa').value='1';
+  document.getElementById('res-overlay').classList.add('open');
+}
+function closeResModal(){document.getElementById('res-overlay').classList.remove('open');}
+function saveReserva(){
+  const nombre=document.getElementById('r-nombre').value.trim();
+  if(!nombre){alert('Introduce el nombre del cliente');return;}
+  const r={
+    id:Date.now(),
+    nombre,tel:document.getElementById('r-tel').value,
+    fecha:document.getElementById('r-fecha').value,
+    hora:document.getElementById('r-hora').value,
+    origen:document.getElementById('r-origen').value,
+    destino:document.getElementById('r-destino').value,
+    precio:parseFloat(document.getElementById('r-precio').value)||0,
+    tarifa:parseInt(document.getElementById('r-tarifa').value),
+    notas:document.getElementById('r-notas').value,
+    estado:'pendiente'
+  };
+  state.reservas.unshift(r);
+  renderReservas(); closeResModal();
+}
+function renderReservas(){
+  const box=document.getElementById('res-list');
+  if(state.reservas.length===0){
+    box.innerHTML='<div class="res-empty">📋<br>Sin reservas aún<br><span style="font-size:.55rem">Pulsa + para añadir</span></div>';
+    return;
+  }
+  box.innerHTML='';
+  state.reservas.forEach(r=>{
+    const el=document.createElement('div');
+    el.className=`res-card ${r.estado}`;
+    el.onclick=()=>cycleResEstado(r.id);
+    el.innerHTML=`<div class="res-stripe"></div>
+    <div class="res-main">
+      <div class="res-name">${r.nombre} ${r.tel?'· '+r.tel:''}</div>
+      <div class="res-route">${r.origen||'—'} → ${r.destino||'—'}</div>
+      <div class="res-meta">
+        <span class="res-meta-item">${fDate(r.fecha+'T00:00:00')}</span>
+        ${r.hora?`<span class="res-meta-item">${r.hora}</span>`:''}
+        ${r.notas?`<span class="res-meta-item">${r.notas.slice(0,30)}</span>`:''}
+      </div>
+    </div>
+    <div class="res-right">
+      <div class="res-price">${r.precio>0?fE(r.precio):'—'}</div>
+      <div class="res-badge ${r.estado}">${r.estado.charAt(0).toUpperCase()+r.estado.slice(1)}</div>
+    </div>`;
+    box.appendChild(el);
+  });
+}
+function cycleResEstado(id){
+  const r=state.reservas.find(x=>x.id===id);
+  if(!r)return;
+  const ciclo=['pendiente','activa','completada','cancelada'];
+  r.estado=ciclo[(ciclo.indexOf(r.estado)+1)%ciclo.length];
+  renderReservas();
+}
+
+// ══════════════ TICKET ══════════════
+function showTicket(c){
+  document.getElementById('tk-tot').textContent=fE(c.precio);
+  document.getElementById('tk-sub').textContent='Ticket · '+fDate(c.fecha);
+  document.getElementById('tk-driver').textContent=cfg.nombre||'—';
+  document.getElementById('tk-veh').textContent=(cfg.vehiculo||'—')+(cfg.matricula?' · '+cfg.matricula:'');
+  document.getElementById('tk-tar').textContent=cfg.t[c.tarifa].name;
+  document.getElementById('tk-ban').textContent=fE(cfg.bajada);
+  document.getElementById('tk-km').textContent=fK(c.dist)+' km';
+  document.getElementById('tk-dur').textContent=fT(c.seg);
+  document.getElementById('tk-ini').textContent=c.ini;
+  document.getElementById('tk-fin').textContent=c.fin;
+  document.getElementById('tk-pkm').textContent=c.dist>0.001?(c.precio/c.dist).toFixed(3).replace('.',',')+' €/km':'—';
+  // barcode
+  const bc=document.getElementById('rcp-bc');bc.innerHTML='';
+  [2,1,3,1,2,3,1,2,1,3,2,1,3,2,1,2,3,1,2,1,3,2,1,2].forEach((w,i)=>{
+    const d=document.createElement('div');d.className='bar';
+    d.style.width=w+'px';d.style.opacity=i%2===0?'1':'0.12';
+    bc.appendChild(d);
+  });
+  document.getElementById('ticket-overlay').classList.add('open');
+}
+function closeTicket(){document.getElementById('ticket-overlay').classList.remove('open');}
+
+// ══════════════ CONFIG ══════════════
+function saveCfg(){
+  cfg.nombre=document.getElementById('cfg-nombre').value||'Conductor VTC';
+  cfg.licencia=document.getElementById('cfg-licencia').value;
+  cfg.vehiculo=document.getElementById('cfg-vehiculo').value;
+  cfg.matricula=document.getElementById('cfg-matricula').value;
+  cfg.bajada=parseFloat(document.getElementById('cfg-ban').value)||2.40;
+  cfg.minimo=parseFloat(document.getElementById('cfg-min').value)||4.00;
+  cfg.t[1].km=parseFloat(document.getElementById('cfg-t1k').value)||1.05;
+  cfg.t[1].min=parseFloat(document.getElementById('cfg-t1m').value)||0.20;
+  cfg.t[2].km=parseFloat(document.getElementById('cfg-t2k').value)||1.25;
+  cfg.t[2].min=parseFloat(document.getElementById('cfg-t2m').value)||0.25;
+  cfg.t[3].km=parseFloat(document.getElementById('cfg-t3k').value)||1.45;
+  cfg.t[3].min=parseFloat(document.getElementById('cfg-t3m').value)||0.30;
+  // update driver card
+  document.getElementById('driver-name').textContent=cfg.nombre;
+  document.getElementById('driver-meta').textContent=
+    [cfg.licencia,cfg.vehiculo,cfg.matricula].filter(Boolean).join(' · ')||'Sin datos';
+  document.getElementById('driver-license').textContent=cfg.licencia||'VTC';
+  refreshTarifaRates();
+  alert('✓ Configuración guardada');
+}
+
+// ══════════════ EXPORT CSV ══════════════
+function exportCSV(){
+  if(!state.historial.length){alert('Sin carreras para exportar');return;}
+  const head='Fecha,Inicio,Fin,Distancia_km,Duracion_min,Tarifa,Precio_EUR\n';
+  const rows=state.historial.map(c=>
+    `${fDate(c.fecha)},${c.ini},${c.fin},${c.dist.toFixed(3)},${Math.round(c.seg/60)},T${c.tarifa},${c.precio.toFixed(2)}`
+  ).join('\n');
+  const blob=new Blob(['\uFEFF'+head+rows],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`vtc_jornada_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();URL.revokeObjectURL(url);
+}
+
+// Close overlays on outside tap
+['res-overlay','ticket-overlay'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{
+    if(e.target===document.getElementById(id))
+      document.getElementById(id).classList.remove('open');
+  });
+});
+
+// Wake Lock
+async function wl(){try{if('wakeLock'in navigator)await navigator.wakeLock.request('screen');}catch(e){}}
+wl();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)wl();});
+
+// INIT
+refreshTarifaRates();
+updateUI();
+updateJornada();
+renderMiniHist();
+renderReservas();
+window.addEventListener('resize',drawChart);
+</script>
+</body>
+</html>
