@@ -773,9 +773,9 @@ if(!cfg.limpieza) cfg.limpieza=50.00;
 const state = {
   running:false, paused:false,
   tarifa: DB.load('tarifa', 1),
-  festivoActivo: DB.load('festivoActivo', false),
+  festivoOn: DB.load('festivoActivo', false),
+  limpiezaOn: false,
   precio:0, dist:0, seg:0, vel:0,
-  limpieza: 0,
   timer:null, geo:null, lastLL:null, tIni:null,
   historial: DB.load('historial', []),
   reservas:  DB.load('reservas', []),
@@ -787,7 +787,7 @@ function persist(){
   DB.save('reservas',  state.reservas);
   DB.save('jornada',   state.jornada);
   DB.save('tarifa',    state.tarifa);
-  DB.save('festivoActivo', state.festivoActivo);
+  DB.save('festivoActivo', state.festivoOn);
 }
 function persistCfg(){ DB.save('cfg', cfg); }
 
@@ -832,9 +832,9 @@ function setStatus(st){
 function setTarifa(n){
   if(state.running)return;
   state.tarifa=n;
-  [1,2,3].forEach(i=>{
+  [1,2].forEach(i=>{
     const b=document.getElementById('tb'+i);
-    b.className='tbtn'+(i===n?` sel-t${i}`:'');
+    if(b) b.className='tbtn'+(i===n?` sel-t${i}`:'');
   });
   document.getElementById('inf-tar').textContent=cfg.t[n].name;
   persist();
@@ -1266,9 +1266,6 @@ document.getElementById('driver-meta').textContent=
   [cfg.licencia,cfg.vehiculo,cfg.matricula].filter(Boolean).join(' · ')||'Sin datos';
 document.getElementById('driver-license').textContent=cfg.licencia||'VTC';
 setTarifa(state.tarifa);
-// Restaurar estado festivo
-state.festivoOn = state.festivoActivo || false;
-state.limpiezaOn = false;
 document.getElementById('btn-festivo-toggle').classList.toggle('on', state.festivoOn);
 document.getElementById('btn-limpieza').innerHTML='🧹 Cargo Limpieza · '+fE(cfg.limpieza);
 refreshTarifaRates();
